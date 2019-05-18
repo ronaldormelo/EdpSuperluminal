@@ -3,8 +3,7 @@
 namespace EdpSuperluminal;
 
 use Zend\Code\Reflection\ClassReflection,
-    Zend\Code\Scanner\FileScanner,
-    Zend\EventManager\StaticEventManager;
+    Zend\Code\Scanner\FileScanner;
 use Zend\Console\Request as ConsoleRequest;
 
 /**
@@ -48,10 +47,24 @@ class Module
             $code = "<?php\n";
         }
 
-        $classes = array_merge(get_declared_interfaces(), get_declared_classes());
+        $classes = [
+            'Psr\Container\ContainerInterface',
+            'Interop\Container\ContainerInterface',
+            'Zend\EventManager\SharedEventManagerAwareInterface',
+            'Zend\Hydrator\HydratorInterface',
+            'Zend\Hydrator\HydrationInterface',
+            'Zend\Hydrator\ExtractionInterface',
+            'end\Stdlib\Hydrator\HydrationInterface',
+        ];
+        $classes = array_merge($classes, get_declared_interfaces());
+        $classes = array_merge($classes, get_declared_classes());
+        $classes = array_merge($classes, get_declared_traits());
+
         foreach ($classes as $class) {
             // Skip non-Zend classes
-            if (0 !== strpos($class, 'Zend')) {
+            if ((0 !== strpos($class, 'Zend')) &&
+                (0 !== strpos($class, 'Psr')) &&
+                (0 !== strpos($class, 'Interop'))){
                 continue;
             }
 
@@ -134,7 +147,11 @@ class Module
             $declaration .= 'interface ';
         }
 
-        if (!$r->isInterface()) {
+        if ($r->isTrait()) {
+            $declaration .= 'trait ';
+        }
+
+        if (!$r->isInterface() && !$r->isTrait()) {
             $declaration .= 'class ';
         }
 
